@@ -2,6 +2,8 @@ from flask import Flask
 from flask import request
 from flask import jsonify
 from flask_cors import CORS
+import random 
+import string
 
 app = Flask(__name__)
 CORS(app)
@@ -37,6 +39,9 @@ users = {
    ]
 }
 
+def ran_gen(size, chars=string.ascii_uppercase + string.digits):
+    return ''.join(random.choice(chars) for x in range(size))
+
 @app.route('/')
 def hello():
     return 'Hello'
@@ -61,8 +66,9 @@ def get_users():
       return users
    elif request.method == 'POST':
       userToAdd = request.get_json()
+      userToAdd['id'] = ran_gen(6)
       users['users_list'].append(userToAdd)
-      resp = jsonify(success=True)
+      resp = jsonify(success=True, status=201, data=userToAdd)
       resp.status_code = 201
       #resp.status_code = 200 #optionally, you can always set a response code. 
       # 200 is the default code for a normal response
@@ -81,7 +87,10 @@ def get_user(id):
          for user in users['users_list']:
             if user['id'] == id:
                users['users_list'].remove(user)
-               return user
-         return jsonify(success=False)         
-
+               resp = jsonify(success=True, status=204, data=user)
+               resp.status_code = 204 
+               return resp
+         resp = jsonify(success=False, status=404) 
+         resp.status_code = 404
+         return resp        
       
